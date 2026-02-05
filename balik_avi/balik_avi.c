@@ -1,6 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include "./myio.h"
+
 
 #define KART_SAYISI 24
 #define OYUNCU_BASLANGIC 6
@@ -20,13 +19,7 @@ int balik_kontrol(int el[], int *adet);
 
 int main() {
 
-    #ifdef TEST
-    srand(49);              /* 🔒 Test ortamı: deterministik */
-#else
-    srand(time(NULL));      /* 🎲 Normal oyun: rastgele */
-#endif
-
-
+  
 
     int deste[KART_SAYISI];
     int deste_indeksi = 0;
@@ -233,6 +226,4 @@ int balik_kontrol(int el[], int *adet) {
     }
     return 0;
 }
-
-
 

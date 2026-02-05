@@ -1,0 +1,21 @@
+# Balık Avı - Makefile
+# Kullanım: make balik_avi
+
+
+CC = gcc
+CFLAGS = -Wall
+
+# Ana hedef
+balik_avi: balik_avi.c myio.h
+	$(CC) $(CFLAGS) -o $@ $<
+
+# Test modu (deterministik)
+test: balik_avi.c myio.h
+	$(CC) $(CFLAGS) -DTEST -o balik_avi balik_avi.c
+
+.PHONY: test clean
+
+# Temizlik
+clean:
+	rm -f balik_avi balik_avi.exe
+
