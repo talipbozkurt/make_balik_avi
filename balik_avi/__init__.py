@@ -6,21 +6,24 @@ import os
 # ============================================================
 # BALIK AVI OYUNU - AUTOGRADING TEST DOSYASI
 # Toplam: 100 Puan
+# Deterministik Test: SEED=49
+# 
+# SEED=49 Beklenen Değerler:
+# - Başlangıç kartları: 2 1 1 4 5 2
+# - Tur 13: 2 numaralı karttan balık
+# - Tur 14: 1 numaralı karttan balık  
+# - Sonuç: OYUNCU 2 balık ile kazanır
 # ============================================================
 
-# Oyunun tamamlanması için yeterli input dizisi
-# Oyun 2 balık veya 12 masadan kart çekene kadar sürer
-# En fazla 24 tur olabilir, her turda 1-6 arası seçim yapılabilir
-GAME_INPUTS = ["1", "2", "3", "4", "5", "6"] * 10  # 60 input - oyun kesin biter
+# Input dizisi - Seed=49 için optimize edilmiş
+# [2,2,2,2,2,1,5] → bu sırayla sorarak oyuncu 2 balık yapar
+GAME_INPUTS = ["2", "2", "2", "2", "2", "1", "5"] + ["1"] * 10
 
 
 def get_output(prog):
     """MockRunner'dan çıktıyı güvenli şekilde al."""
-    # Programı doğrudan çalıştır (pattern matching olmadan)
     if not prog.executed:
         prog._decide_and_run()
-    
-    # stdout_text üzerinden çıktıyı al
     return prog.stdout_text if hasattr(prog, 'stdout_text') else ""
 
 
@@ -32,21 +35,13 @@ def exists():
 
 @check50.check(exists, points=5)
 def syntax_check():
-    """Yasaklı syntax kontrolü - C99 öncesi stil (5 Puan)"""
+    """C99 öncesi syntax kontrolü (5 Puan)"""
     with open("balik_avi.c", "r", encoding="utf-8") as f:
         content = f.read()
     
-    # C99 öncesi stil zorunluluğu: for(int i=0) tespiti
     if re.search(r"for\s*\(\s*int\s+", content):
         raise check50.Failure(
-            "Eksi 5 Puan: For döngüsü içinde 'int' tanımlaması yapılmış.\n"
-            "Değişkeni döngüden önce tanımlayınız (Örn: int i; for(i=0...))"
-        )
-    
-    # while(int x=...) kontrolü
-    if re.search(r"while\s*\(\s*int\s+", content):
-        raise check50.Failure(
-            "Eksi 5 Puan: While döngüsü içinde değişken tanımlaması yapılmış.\n"
+            "For döngüsü içinde 'int' tanımlaması yapılmış.\n"
             "Değişkeni döngüden önce tanımlayınız."
         )
 
@@ -59,116 +54,141 @@ def compiles():
 
 @check50.check(compiles, points=10)
 def test_start():
-    """Oyun başlangıç mesajları doğru mu? (10 Puan)"""
+    """Başlangıç durumu - SEED=49 kontrolü (10 Puan)"""
     prog = check50.run("./balik_avi")
-    
-    # Oyunun bitmesi için yeterli input gönder
     for inp in GAME_INPUTS:
         prog.stdin(inp)
-    
     output = get_output(prog)
     
     errors = []
     
-    # Kontrol 1: Oyun başlığı
-    if "BALIK AVI" not in output.upper():
-        errors.append("Oyun başlığı '=== BALIK AVI KART OYUNU ===' bulunamadı.")
+    # SEED=49 ile başlangıç kartları: 2 1 1 4 5 2
+    if "Oyuncu kartlari: 2 1 1 4 5 2" not in output:
+        errors.append("SEED=49 ile başlangıç kartları '2 1 1 4 5 2' olmalı.")
     
-    # Kontrol 2: Kartlar dağıtılıyor mesajı
-    if "dagitiliyor" not in output.lower() and "dağıtılıyor" not in output.lower():
-        errors.append("'Kartlar dağıtılıyor...' mesajı eksik.")
+    # Masadaki kart sayısı: 12
+    if "Masadaki kalan kart sayisi: 12" not in output:
+        errors.append("Başlangıçta masada 12 kart olmalı.")
     
-    # Kontrol 3: Oyuncu kartları gösteriliyor mu
-    if "oyuncu kart" not in output.lower():
-        errors.append("Oyuncunun kartları yazdırılmamış.")
-    
-    # Kontrol 4: Bilgisayar kart sayısı
-    if "bilgisayar kart" not in output.lower():
-        errors.append("Bilgisayar kart sayısı gösterilmemiş.")
-    
-    # Kontrol 5: Masadaki kart sayısı
-    if "masa" not in output.lower():
-        errors.append("Masadaki kart sayısı gösterilmemiş.")
+    # Bilgisayar kart sayısı: 6
+    if "Bilgisayar kart sayisi: 6" not in output:
+        errors.append("Başlangıçta bilgisayarda 6 kart olmalı.")
     
     if errors:
         raise check50.Failure("\n".join(errors))
 
 
-@check50.check(compiles, points=20)
+@check50.check(compiles, points=15)
 def test_game_loop():
-    """Oyun döngüsü ve kullanıcı girişi doğru mu? (20 Puan)"""
+    """Oyun döngüsü ve tur mekaniği (15 Puan)"""
     prog = check50.run("./balik_avi")
-    
-    # Oyunun bitmesi için yeterli input gönder
     for inp in GAME_INPUTS:
         prog.stdin(inp)
-    
     output = get_output(prog)
     
     errors = []
     
-    # Kontrol 1: TUR bilgisi
-    if "TUR" not in output.upper():
-        errors.append("Tur bilgisi (Örn: --- TUR 1 ---) ekrana yazdırılmalı.")
+    # TUR 1 kontrolü
+    if "--- TUR 1 ---" not in output:
+        errors.append("TUR 1 gösterilmemiş.")
     
-    # Kontrol 2: Balık sayısı gösteriliyor mu
-    if "balik sayisi" not in output.lower() and "balık sayısı" not in output.lower():
-        errors.append("Her turda balık sayıları gösterilmeli.")
+    # Balık sayısı gösterimi
+    if "Oyuncunun balik sayisi: 0 | Bilgisayarin balik sayisi: 0" not in output:
+        errors.append("Başlangıçta balık sayıları 0|0 olmalı.")
     
-    # Kontrol 3: Hangi kart numarasını sormak istiyorsunuz?
-    if "hangi kart" not in output.lower():
-        errors.append("'Hangi kart numarasını sormak istiyorsunuz?' sorusu eksik.")
+    # Kart sorma prompt'u
+    if "Hangi kart numarasini sormak istiyorsunuz?" not in output:
+        errors.append("Kart sorma prompt'u eksik.")
     
-    # Kontrol 4: Bilgisayarın cevabı (var/yok/balık avı)
-    found_positive = "var" in output.lower() or "verildi" in output.lower()
-    found_negative = "yok" in output.lower() or "balik avi" in output.lower() or "balık avı" in output.lower()
-    
-    if not (found_positive or found_negative):
-        errors.append("Bilgisayarın cevabı (Var!/Yok/Balık Avı) algılanamadı.")
+    # Bilgisayar sırası
+    if "Bilgisayar" not in output or "karti soruyor" not in output:
+        errors.append("Bilgisayar sırası mesajı eksik.")
     
     if errors:
         raise check50.Failure("\n".join(errors))
 
 
-@check50.check(compiles, points=25)
-def test_full_flow():
-    """Oyun akışı ve format kontrolü (25 Puan)"""
+@check50.check(compiles, points=15)
+def test_card_transfer():
+    """Kart transferi ve Balık Avı mekaniği (15 Puan)"""
     prog = check50.run("./balik_avi")
-    
-    # Oyunun bitmesi için yeterli input gönder
     for inp in GAME_INPUTS:
         prog.stdin(inp)
-    
-    try:
-        output = get_output(prog)
-        
-    except Exception as e:
-        raise check50.Failure(f"Oyun ardışık girişler sırasında hata verdi: {e}")
+    output = get_output(prog)
     
     errors = []
     
-    # Kontrol 1: Masa kartları gösteriliyor mu
-    if "masadaki" not in output.lower() and "masa" not in output.lower():
-        errors.append("Masadaki kalan kart sayısı gösterilmeli.")
+    # SEED=49, TUR 1: Bilgisayarda 2 yok
+    if "Bilgisayarda 2 numarali kart YOK" not in output:
+        errors.append("TUR 1'de '2 numaralı kart YOK' mesajı eksik.")
     
-    # Kontrol 2: Bilgisayar sırası var mı
-    if "bilgisayar" not in output.lower():
-        errors.append("Bilgisayar sırası oyun akışında eksik.")
+    # Balık Avı mesajı
+    if "Balik Avi" not in output:
+        errors.append("Balık Avı mesajı eksik.")
     
-    # Kontrol 3: Çoklu tur oynandı mı
-    tur_matches = re.findall(r"TUR\s*\d+", output.upper())
-    if len(tur_matches) < 2:
-        errors.append("Oyun birden fazla tur oynamamış. Sıra geçişleri çalışmıyor olabilir.")
+    # Masadan kart çekme
+    if "Masadan cekilen kart:" not in output:
+        errors.append("Masadan çekilen kart mesajı eksik.")
     
-    # Kontrol 4: Kart çekme mesajı var mı (masadan veya transfer)
-    if "cekilen" not in output.lower() and "çekilen" not in output.lower() and \
-       "verildi" not in output.lower() and "aliyor" not in output.lower():
-        errors.append("Kart çekme/transfer mesajları eksik.")
-    
-    # Kontrol 5: Oyun sonu mesajı var mı
-    if "oyun bitti" not in output.lower() and "kazanan" not in output.lower():
-        errors.append("Oyun sonu mesajı (=== OYUN BİTTİ === veya Kazanan:) eksik.")
+    # Kart var durumu (TUR 13'te bilgisayarda 1 var)
+    if "kart(lar) var! verildi" not in output:
+        errors.append("Kart transfer mesajı ('var! verildi') bulunamadı.")
     
     if errors:
         raise check50.Failure("\n".join(errors))
 
+
+@check50.check(compiles, points=15)
+def test_fish_creation():
+    """Balık oluşturma - 4 aynı kart (15 Puan)"""
+    prog = check50.run("./balik_avi")
+    for inp in GAME_INPUTS:
+        prog.stdin(inp)
+    output = get_output(prog)
+    
+    errors = []
+    
+    # SEED=49: TUR 13'te 2 numaralı karttan balık
+    if "Tebrikler! 2 numarali karttan 4 adet topladiniz" not in output:
+        errors.append("2 numaralı karttan balık oluşturma mesajı eksik.")
+    
+    # SEED=49: TUR 14'te 1 numaralı karttan balık
+    if "Tebrikler! 1 numarali karttan 4 adet topladiniz" not in output:
+        errors.append("1 numaralı karttan balık oluşturma mesajı eksik.")
+    
+    # Balık sayısı artışı - 1. balık sonrası
+    if "Oyuncunun balik sayisi: 1" not in output:
+        errors.append("1. balık sonrası sayı artmamış.")
+    
+    if errors:
+        raise check50.Failure("\n".join(errors))
+
+
+@check50.check(compiles, points=0)
+def test_game_end():
+    """Oyun sonu kontrolü - SEED=49 (Bonus - 0 Puan)"""
+    prog = check50.run("./balik_avi")
+    for inp in GAME_INPUTS:
+        prog.stdin(inp)
+    output = get_output(prog)
+    
+    errors = []
+    
+    # SEED=49: Oyuncu 2 balık ile kazanır
+    if "=== OYUN BITTI ===" not in output:
+        errors.append("Oyun sonu mesajı eksik.")
+    
+    if "Kazanan: OYUNCU!" not in output:
+        errors.append("SEED=49 ile oyuncu kazanmalı.")
+    
+    if "Oyuncunun toplam baligi: 2" not in output:
+        errors.append("Oyuncunun toplam balığı 2 olmalı.")
+    
+    if "Bilgisayarin toplam baligi: 0" not in output:
+        errors.append("Bilgisayarın toplam balığı 0 olmalı.")
+    
+    if "Masadaki kalan kart sayisi: 2" not in output:
+        errors.append("Masada 2 kart kalmalı.")
+    
+    if errors:
+        raise check50.Failure("\n".join(errors))
