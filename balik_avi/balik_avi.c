@@ -19,7 +19,14 @@ void kart_ekle_coklu(int el[], int *adet, int kart, int miktar);
 int balik_kontrol(int el[], int *adet);
 
 int main() {
-    srand(time(NULL));
+
+    #ifdef TEST
+    srand(49);              /* 🔒 Test ortamı: deterministik */
+#else
+    srand(time(NULL));      /* 🎲 Normal oyun: rastgele */
+#endif
+
+
 
     int deste[KART_SAYISI];
     int deste_indeksi = 0;
