@@ -236,6 +236,3 @@ int balik_kontrol(int el[], int *adet) {
 
 
 
-
-
-
