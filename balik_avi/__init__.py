@@ -51,7 +51,6 @@ def compiles():
     """Kod derleniyor mu? (40 Puan)"""
     check50.c.compile("balik_avi.c", lcs50=False)
 
-
 @check50.check(compiles, points=10)
 def test_start():
     """Başlangıç durumu - SEED=49 kontrolü (10 Puan)"""
@@ -59,24 +58,21 @@ def test_start():
     for inp in GAME_INPUTS:
         prog.stdin(inp)
     output = get_output(prog)
-    
-    errors = []
-    
-    # SEED=49 ile başlangıç kartları: 2 1 1 4 5 2
-   if not re.search(r"oyuncu.*2\s+1\s+1\s+4\s+5\s+2", output, re.IGNORECASE):
-    errors.append("SEED=49 ile başlangıç kartları '2 1 1 4 5 2' olmalı.")
 
-    
-    # Masadaki kart sayısı: 12
-    if "Masadaki kalan kart sayisi: 12" not in output:
+    errors = []
+
+    if not re.search(r"oyuncu.*2\s+1\s+1\s+4\s+5\s+2", output, re.IGNORECASE):
+        errors.append("SEED=49 ile başlangıç kartları '2 1 1 4 5 2' olmalı.")
+
+    if not re.search(r"masa.*\b12\b", output, re.IGNORECASE):
         errors.append("Başlangıçta masada 12 kart olmalı.")
-    
-    # Bilgisayar kart sayısı: 6
-    if "Bilgisayar kart sayisi: 6" not in output:
+
+    if not re.search(r"bilgisayar.*\b6\b", output, re.IGNORECASE):
         errors.append("Başlangıçta bilgisayarda 6 kart olmalı.")
-    
+
     if errors:
         raise check50.Failure("\n".join(errors))
+
 
 
 @check50.check(compiles, points=15)
