@@ -63,7 +63,7 @@ def test_start():
     errors = []
     
     # SEED=49 ile başlangıç kartları: 2 1 1 4 5 2
-    if "Oyuncu kartlari: 2 1 1 4 5 2" not in output:
+    if "Oyuncu kartlari: 2 1 1 4 5 2" not in output[output.index("Oyuncu"):output[output.index("Oyuncu"):].index("\n")]:
         errors.append("SEED=49 ile başlangıç kartları '2 1 1 4 5 2' olmalı.")
     
     # Masadaki kart sayısı: 12
@@ -121,6 +121,7 @@ def test_card_transfer():
     # SEED=49, TUR 1: Bilgisayarda 2 yok
     if "Bilgisayarda 2 numarali kart YOK" not in output:
         errors.append("TUR 1'de '2 numaralı kart YOK' mesajı eksik.")
+    
     
     # Balık Avı mesajı
     if "Balik Avi" not in output:

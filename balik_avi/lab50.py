@@ -136,7 +136,7 @@ class MockCheck50:
 
             output = filename.replace(".c", "")
             # -DTEST flag'i ile deterministik test (myio.h'daki SEED=49 aktif olur)
-            cmd = ["clang", "-DTEST", "-o", output, filename]
+            cmd = ["gcc", "-DTEST", "-o", output, filename]
             if lcs50: cmd.append("-lcs50")
             res = subprocess.run(cmd, capture_output=True, text=True)
             if res.returncode != 0: raise Exception(f"C Derleme Hatası:\n{res.stderr}")
