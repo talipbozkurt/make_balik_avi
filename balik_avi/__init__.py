@@ -63,8 +63,9 @@ def test_start():
     errors = []
     
     # SEED=49 ile başlangıç kartları: 2 1 1 4 5 2
-    if "Oyuncu kartlari: 2 1 1 4 5 2" not in output[output.index("Oyuncu"):output[output.index("Oyuncu"):].index("\n")]:
-        errors.append("SEED=49 ile başlangıç kartları '2 1 1 4 5 2' olmalı.")
+   if not re.search(r"oyuncu.*2\s+1\s+1\s+4\s+5\s+2", output, re.IGNORECASE):
+    errors.append("SEED=49 ile başlangıç kartları '2 1 1 4 5 2' olmalı.")
+
     
     # Masadaki kart sayısı: 12
     if "Masadaki kalan kart sayisi: 12" not in output:
